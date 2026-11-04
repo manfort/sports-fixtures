@@ -14,7 +14,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 DATA = Path(__file__).with_name("fixtures.json")
-KEEP_PAST = timedelta(days=1)
+# How long after the start an event stays listed, by category (hours). Keep in sync with index.html.
+DURATION_H = {"foot": 2, "volley": 2, "motor": 2, "basket": 2.5, "hockey": 2.5, "amfoot": 3.5, "tennis": 4, "wrest": 4, "fight": 5}
+DEFAULT_DURATION_H = 2.5
 SCAN_LIMIT = int(os.environ.get("SCAN_LIMIT", "1000"))
 
 PATTERN = re.compile(
@@ -88,8 +90,12 @@ def load():
 
 def save(items):
     now = datetime.now(timezone.utc)
-    cutoff = (now - KEEP_PAST).strftime("%Y-%m-%dT%H:%M:%SZ")
-    items = sorted((i for i in items if i["time"] >= cutoff), key=lambda i: (i["time"], i["channel"], i["num"]))
+
+    def still_on(i):
+        start = datetime.strptime(i["time"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        return start + timedelta(hours=DURATION_H.get(i["cat"], DEFAULT_DURATION_H)) >= now
+
+    items = sorted(filter(still_on, items), key=lambda i: (i["time"], i["channel"], i["num"]))
     if items == load():
         print("no changes")
         return

@@ -73,6 +73,7 @@ input[type="search"] { flex: 1 1 220px; min-width: 0; }
 .cat { font-size: .74rem; font-weight: 600; padding: 1px 8px; border-radius: 4px; border: 1px solid currentColor; }
 .cat.foot { color: var(--c-foot); } .cat.fight { color: var(--c-fight); } .cat.wrest { color: var(--c-wrest); } .cat.other { color: var(--c-other); }
 .ch { font-variant-numeric: tabular-nums; }
+.live { font-size: .74rem; font-weight: 600; padding: 1px 8px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); }
 .empty { margin-top: 26px; padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
@@ -122,6 +123,10 @@ const CATS = { all: "ทั้งหมด", foot: "ฟุตบอล", basket:
 const DAYS = { all: "ทั้งหมด", today: "วันนี้", tomorrow: "พรุ่งนี้", week: "7 วันข้างหน้า" };
 const TH_OFFSET = 7;
 const REFRESH_MS = 5 * 60 * 1000;
+// How long after the start an event stays listed, by category (hours). Keep in sync with fetch.py.
+const DURATION_H = { foot: 2, volley: 2, motor: 2, basket: 2.5, hockey: 2.5, amfoot: 3.5, tennis: 4, wrest: 4, fight: 5 };
+const DEFAULT_DURATION_H = 2.5;
+const endsAt = (it) => it.t + (DURATION_H[it.cat] ?? DEFAULT_DURATION_H) * 3600e3;
 
 const fmtDay = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
 const fmtShort = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", weekday: "short", day: "numeric", month: "short" });
@@ -177,13 +182,14 @@ function render() {
 
   visible = state.items
     .map((it) => ({ ...it, dayKey: thDayKey(it.t) }))
+    .filter((it) => endsAt(it) >= now)
     .filter((it) => state.cat === "all" || it.cat === state.cat)
     .filter((it) => state.ch === "all" || it.channel === state.ch)
     .filter((it) => !q || `${it.name} ${it.channel} ${it.num}`.toLowerCase().includes(q))
     .filter((it) => {
       if (state.day === "today") return it.dayKey === todayKey;
       if (state.day === "tomorrow") return it.dayKey === tomorrowKey;
-      if (state.day === "week") return it.t >= now - 3 * 3600e3 && it.t <= now + 7 * 864e5;
+      if (state.day === "week") return it.t <= now + 7 * 864e5;
       return true;
     })
     .sort((a, b) => a.t - b.t || a.num.localeCompare(b.num));
@@ -218,9 +224,9 @@ function render() {
     ul.className = "list";
     for (const it of list) {
       const row = document.createElement("div");
-      row.className = "item" + (it.t < now - 3 * 3600e3 ? " past" : "");
+      row.className = "item";
       row.innerHTML = `<div class="time"></div><div class="body"><div class="name"></div>
-        <div class="meta"><span class="cat ${CATS[it.cat] ? it.cat : "other"}">${CATS[it.cat] || CATS.other}</span><span class="ch"></span></div></div>`;
+        <div class="meta">${it.t <= now ? '<span class="live">กำลังถ่ายทอด</span>' : ""}<span class="cat ${CATS[it.cat] ? it.cat : "other"}">${CATS[it.cat] || CATS.other}</span><span class="ch"></span></div></div>`;
       row.querySelector(".time").textContent = fmtTime.format(it.t);
       row.querySelector(".name").textContent = it.name;
       row.querySelector(".ch").textContent = it.labels.join(" · ");
