@@ -1,0 +1,117 @@
+{
+ "updated": "2026-11-04T12:26:02Z",
+ "items": [
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "02",
+   "name": "TAT Passi Leg Philippines GD2",
+   "cat": "other",
+   "time": "2026-11-06T09:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "03",
+   "name": "D. O. A. 2026",
+   "cat": "other",
+   "time": "2026-11-07T02:28:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "04",
+   "name": "TAT Passi Leg Philippines GD3",
+   "cat": "other",
+   "time": "2026-11-07T09:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "05",
+   "name": "Sharjah vs Shabab Al Ahli",
+   "cat": "foot",
+   "time": "2026-11-07T15:20:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "06",
+   "name": "NEXZONE FN: Süllü vs Ismail",
+   "cat": "fight",
+   "time": "2026-11-07T16:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "07",
+   "name": "GCW: The Crossroads 2026",
+   "cat": "wrest",
+   "time": "2026-11-08T01:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "08",
+   "name": "Al Jazira vs Al Wasl",
+   "cat": "foot",
+   "time": "2026-11-08T12:45:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "09",
+   "name": "Al Nasr vs United",
+   "cat": "foot",
+   "time": "2026-11-08T12:45:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "10",
+   "name": "Al Wahda vs Al Ain",
+   "cat": "foot",
+   "time": "2026-11-08T15:20:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "11",
+   "name": "GCW: Massacre in Missoula 2026",
+   "cat": "wrest",
+   "time": "2026-11-14T23:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "12",
+   "name": "TLP 25: Thanksgiving Throwdown",
+   "cat": "wrest",
+   "time": "2026-11-21T22:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "13",
+   "name": "GCW Home for the Hellidays 26",
+   "cat": "wrest",
+   "time": "2026-12-12T01:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "14",
+   "name": "Deck the Halls w/ Light Tubes",
+   "cat": "wrest",
+   "time": "2026-12-13T00:00:00Z"
+  },
+  {
+   "region": "US",
+   "channel": "TRILLER TV",
+   "num": "15",
+   "name": "GCW: For All The Dogs 2026",
+   "cat": "wrest",
+   "time": "2026-12-21T00:00:00Z"
+  }
+ ]
+}

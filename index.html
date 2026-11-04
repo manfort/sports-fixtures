@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ตารางถ่ายทอดสด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow broadcast-guide column; day headers, then rows of [big kickoff time | event + channel] */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --fg: #141a24;
+  --muted: #5d6878;
+  --line: #dde2ea;
+  --accent: #0b6e8a;
+  --accent-ink: #ffffff;
+  --c-foot: #1f8a4c;
+  --c-fight: #c2410c;
+  --c-wrest: #7c3aed;
+  --c-other: #64748b;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans Thai", "Thonburi", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141b; --surface: #171e28; --fg: #e8edf4; --muted: #95a1b2; --line: #263040;
+    --accent: #3fb3d4; --accent-ink: #06232c;
+    --c-foot: #4ccb80; --c-fight: #fb8a4c; --c-wrest: #b291ff; --c-other: #9aa8bb;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141b; --surface: #171e28; --fg: #e8edf4; --muted: #95a1b2; --line: #263040;
+  --accent: #3fb3d4; --accent-ink: #06232c;
+  --c-foot: #4ccb80; --c-fight: #fb8a4c; --c-wrest: #b291ff; --c-other: #9aa8bb;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header h1 { font-family: var(--font-display); font-weight: 700; font-size: 2.4rem; line-height: 1; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
+.demo { margin-top: 14px; font-size: .82rem; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; }
+
+.controls { display: grid; gap: 10px; margin-top: 20px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+input[type="search"], select, textarea {
+  font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+}
+input[type="search"] { flex: 1 1 220px; min-width: 0; }
+.chip { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tz { font-size: .82rem; color: var(--muted); }
+.tz select { padding: 4px 8px; font-size: .82rem; }
+
+.day { margin-top: 26px; }
+.day h2 { font-size: .8rem; font-weight: 600; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; }
+.day h2 .rel { color: var(--accent); }
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.item { display: grid; grid-template-columns: 68px 1fr; gap: 14px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
+.item:first-child { border-top: 0; }
+.item.past { opacity: .45; }
+.time { font-family: var(--font-display); font-weight: 600; font-size: 1.55rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.body { min-width: 0; }
+.name { font-weight: 600; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 3px; font-size: .82rem; color: var(--muted); }
+.cat { font-size: .74rem; font-weight: 600; padding: 1px 8px; border-radius: 4px; border: 1px solid currentColor; }
+.cat.foot { color: var(--c-foot); } .cat.fight { color: var(--c-fight); } .cat.wrest { color: var(--c-wrest); } .cat.other { color: var(--c-other); }
+.ch { font-variant-numeric: tabular-nums; }
+.empty { margin-top: 26px; padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.status { font-size: .85rem; color: var(--muted); align-self: center; }
+
+details { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); font-size: .85rem; margin: 8px 0; }
+textarea { width: 100%; min-height: 150px; font-size: .8rem; font-family: ui-monospace, Menlo, monospace; resize: vertical; }
+#copyOut { min-height: 120px; margin-top: 10px; }
+@media (max-width: 420px) { .item { grid-template-columns: 56px 1fr; gap: 10px; } .time { font-size: 1.35rem; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ตารางถ่ายทอดสด</h1>
+    <p>เวลาประเทศไทย · <span id="updated">กำลังโหลด…</span></p>
+  </header>
+
+  <div class="controls">
+    <div class="row">
+      <input type="search" id="q" placeholder="ค้นหาทีม รายการ หรือช่อง" aria-label="ค้นหา">
+    </div>
+    <div class="row" id="days" role="group" aria-label="ช่วงวัน"></div>
+    <div class="row" id="cats" role="group" aria-label="ประเภทกีฬา"></div>
+  </div>
+
+  <div id="out"><div class="empty">กำลังโหลดตารางแข่ง…</div></div>
+
+  <div class="actions">
+    <button class="btn primary" id="copyBtn" type="button">คัดลอกข้อความไปวางใน OpenChat</button>
+    <span class="status" id="copyStatus" aria-live="polite"></span>
+  </div>
+  <textarea id="copyOut" readonly hidden aria-label="ข้อความสำหรับ OpenChat"></textarea>
+</div>
+
+<script>
+const CATS = { all: "ทั้งหมด", foot: "ฟุตบอล", fight: "มวย / MMA", wrest: "มวยปล้ำ", other: "อื่นๆ" };
+const DAYS = { all: "ทั้งหมด", today: "วันนี้", tomorrow: "พรุ่งนี้", week: "7 วันข้างหน้า" };
+const TH_OFFSET = 7;
+const REFRESH_MS = 5 * 60 * 1000;
+
+const fmtDay = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
+const fmtShort = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", weekday: "short", day: "numeric", month: "short" });
+const fmtTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", hour12: false });
+const fmtStamp = new Intl.DateTimeFormat("th-TH", { timeZone: "Asia/Bangkok", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+function thDayKey(t) { return new Date(t + TH_OFFSET * 3600e3).toISOString().slice(0, 10); }
+
+const state = { items: [], q: "", day: "all", cat: "all", loaded: false };
+let visible = [];
+const $ = (id) => document.getElementById(id);
+
+async function loadData() {
+  try {
+    const res = await fetch("fixtures.json?ts=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    state.items = data.items.map((it) => ({ ...it, t: Date.parse(it.time) }));
+    state.loaded = true;
+    $("updated").textContent = data.updated ? "อัปเดตล่าสุด " + fmtStamp.format(Date.parse(data.updated)) : "ยังไม่มีข้อมูล";
+  } catch (e) {
+    if (!state.loaded) $("updated").textContent = "โหลดข้อมูลไม่ได้ ลองรีเฟรชหน้านี้";
+  }
+  render();
+}
+
+function chips(el, map, key) {
+  el.innerHTML = "";
+  for (const [k, label] of Object.entries(map)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = label;
+    b.setAttribute("aria-pressed", String(state[key] === k));
+    b.onclick = () => { state[key] = k; chips(el, map, key); render(); };
+    el.appendChild(b);
+  }
+}
+
+function render() {
+  if (!state.loaded) return;
+  const now = Date.now();
+  const todayKey = thDayKey(now);
+  const tomorrowKey = thDayKey(now + 864e5);
+  const q = state.q.toLowerCase();
+
+  visible = state.items
+    .map((it) => ({ ...it, dayKey: thDayKey(it.t) }))
+    .filter((it) => state.cat === "all" || it.cat === state.cat)
+    .filter((it) => !q || `${it.name} ${it.channel} ${it.num}`.toLowerCase().includes(q))
+    .filter((it) => {
+      if (state.day === "today") return it.dayKey === todayKey;
+      if (state.day === "tomorrow") return it.dayKey === tomorrowKey;
+      if (state.day === "week") return it.t >= now - 3 * 3600e3 && it.t <= now + 7 * 864e5;
+      return true;
+    })
+    .sort((a, b) => a.t - b.t);
+
+  const out = $("out");
+  out.innerHTML = "";
+  if (!visible.length) {
+    const msg = state.day === "today" ? "วันนี้ยังไม่มีรายการ" : state.day === "tomorrow" ? "พรุ่งนี้ยังไม่มีรายการ" : "ไม่พบรายการที่ตรงกับตัวกรอง";
+    out.innerHTML = `<div class="empty">${msg}<br>ลองเลือก “ทั้งหมด” หรือล้างช่องค้นหา</div>`;
+    return;
+  }
+  const groups = new Map();
+  for (const it of visible) { if (!groups.has(it.dayKey)) groups.set(it.dayKey, []); groups.get(it.dayKey).push(it); }
+  for (const [key, list] of groups) {
+    const sec = document.createElement("section");
+    sec.className = "day";
+    const rel = key === todayKey ? "วันนี้" : key === tomorrowKey ? "พรุ่งนี้" : "";
+    sec.innerHTML = `<h2>${fmtDay.format(list[0].t)}${rel ? `<span class="rel">${rel}</span>` : ""}</h2>`;
+    const ul = document.createElement("div");
+    ul.className = "list";
+    for (const it of list) {
+      const row = document.createElement("div");
+      row.className = "item" + (it.t < now - 3 * 3600e3 ? " past" : "");
+      row.innerHTML = `<div class="time"></div><div class="body"><div class="name"></div>
+        <div class="meta"><span class="cat ${CATS[it.cat] ? it.cat : "other"}">${CATS[it.cat] || CATS.other}</span><span class="ch"></span></div></div>`;
+      row.querySelector(".time").textContent = fmtTime.format(it.t);
+      row.querySelector(".name").textContent = it.name;
+      row.querySelector(".ch").textContent = `${it.channel} · ช่อง ${it.num}`;
+      ul.appendChild(row);
+    }
+    sec.appendChild(ul);
+    out.appendChild(sec);
+  }
+}
+
+function openchatText() {
+  const lines = ["📺 ตารางถ่ายทอดสด (เวลาไทย)"];
+  let last = "";
+  for (const it of visible) {
+    if (it.dayKey !== last) { lines.push("", `🗓 ${fmtShort.format(it.t)}`); last = it.dayKey; }
+    lines.push(`• ${fmtTime.format(it.t)} ${it.name} — ${it.channel} ${it.num}`);
+  }
+  lines.push("", location.href.split(/[?#]/)[0]);
+  return lines.join("\n");
+}
+
+$("copyBtn").onclick = () => {
+  if (!visible.length) { $("copyStatus").textContent = "ไม่มีรายการให้คัดลอก ลองเปลี่ยนตัวกรอง"; return; }
+  const text = openchatText();
+  const box = $("copyOut");
+  box.value = text;
+  const fallback = () => { box.hidden = false; box.focus(); box.select(); $("copyStatus").textContent = "คัดลอกอัตโนมัติไม่ได้ กด Ctrl/⌘+C เพื่อคัดลอกข้อความด้านล่าง"; };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      box.hidden = false;
+      $("copyStatus").textContent = `คัดลอกแล้ว ${visible.length} รายการ นำไปวางใน OpenChat ได้เลย`;
+    }, fallback);
+  } else fallback();
+};
+
+$("q").oninput = (e) => { state.q = e.target.value.trim(); render(); };
+chips($("days"), DAYS, "day");
+chips($("cats"), CATS, "cat");
+loadData();
+setInterval(loadData, REFRESH_MS);
+</script>
+</body>
+</html>
