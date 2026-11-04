@@ -172,7 +172,19 @@ function render() {
       if (state.day === "week") return it.t >= now - 3 * 3600e3 && it.t <= now + 7 * 864e5;
       return true;
     })
-    .sort((a, b) => a.t - b.t);
+    .sort((a, b) => a.t - b.t || a.num.localeCompare(b.num));
+
+  // The same event on several channels becomes one row listing every channel.
+  const merged = new Map();
+  for (const it of visible) {
+    const k = it.t + "|" + it.name.toLowerCase();
+    const label = `${it.channel} ช่อง ${it.num}`;
+    const short = `${it.channel} ${it.num}`;
+    const m = merged.get(k);
+    if (!m) merged.set(k, { ...it, labels: [label], shorts: [short] });
+    else if (!m.labels.includes(label)) { m.labels.push(label); m.shorts.push(short); }
+  }
+  visible = [...merged.values()];
 
   const out = $("out");
   out.innerHTML = "";
@@ -197,7 +209,7 @@ function render() {
         <div class="meta"><span class="cat ${CATS[it.cat] ? it.cat : "other"}">${CATS[it.cat] || CATS.other}</span><span class="ch"></span></div></div>`;
       row.querySelector(".time").textContent = fmtTime.format(it.t);
       row.querySelector(".name").textContent = it.name;
-      row.querySelector(".ch").textContent = `${it.channel} · ช่อง ${it.num}`;
+      row.querySelector(".ch").textContent = it.labels.join(" · ");
       ul.appendChild(row);
     }
     sec.appendChild(ul);
@@ -210,7 +222,7 @@ function openchatText() {
   let last = "";
   for (const it of visible) {
     if (it.dayKey !== last) { lines.push("", `🗓 ${fmtShort.format(it.t)}`); last = it.dayKey; }
-    lines.push(`• ${fmtTime.format(it.t)} ${it.name} — ${it.channel} ${it.num}`);
+    lines.push(`• ${fmtTime.format(it.t)} ${it.name} — ${it.shorts.join(", ")}`);
   }
   return lines.join("\n");
 }
