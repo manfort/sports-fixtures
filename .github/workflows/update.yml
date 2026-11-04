@@ -26,8 +26,8 @@ jobs:
           TG_API_HASH: ${{ secrets.TG_API_HASH }}
           TG_SESSION: ${{ secrets.TG_SESSION }}
           TG_CHANNEL: ${{ secrets.TG_CHANNEL }}
-          # Time zone of the times in the posts, in hours from UTC (0 = UTC, -5 = US Eastern)
-          SOURCE_UTC_OFFSET: "0"
+          # Time zone of the times in the posts
+          SOURCE_TZ: "America/New_York"
       - run: |
           git config user.name "fixtures-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
