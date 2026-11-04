@@ -212,7 +212,6 @@ function openchatText() {
     if (it.dayKey !== last) { lines.push("", `🗓 ${fmtShort.format(it.t)}`); last = it.dayKey; }
     lines.push(`• ${fmtTime.format(it.t)} ${it.name} — ${it.channel} ${it.num}`);
   }
-  lines.push("", location.href.split(/[?#]/)[0]);
   return lines.join("\n");
 }
 
