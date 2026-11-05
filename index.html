@@ -100,7 +100,7 @@ textarea { width: 100%; min-height: 150px; font-size: .8rem; font-family: ui-mon
 
   <div class="controls">
     <div class="row">
-      <input type="search" id="q" placeholder="ค้นหาทีม รายการ หรือช่อง" aria-label="ค้นหา">
+      <input type="search" id="q" placeholder="ค้นหาไทยหรืออังกฤษ เช่น แมนยู, ลิเวอร์พูล, UFC, F1" aria-label="ค้นหา">
     </div>
     <div class="row" id="days" role="group" aria-label="ช่วงวัน"></div>
     <div class="row" id="cats" role="group" aria-label="ประเภทกีฬา"></div>
@@ -120,6 +120,64 @@ textarea { width: 100%; min-height: 150px; font-size: .8rem; font-family: ui-mon
 
 <script>
 const CATS = { all: "ทั้งหมด", foot: "ฟุตบอล", basket: "บาสเกตบอล", amfoot: "อเมริกันฟุตบอล", hockey: "ฮอกกี้", volley: "วอลเลย์บอล", tennis: "เทนนิส", fight: "มวย / MMA", wrest: "มวยปล้ำ", motor: "รถแข่ง", other: "อื่นๆ" };
+// Extra English words per category, so "soccer" or "boxing" finds a category even when the name doesn't say it.
+const CAT_WORDS = { foot: "soccer football", basket: "basketball", amfoot: "american football nfl", hockey: "hockey", volley: "volleyball", tennis: "tennis", fight: "boxing mma fight", wrest: "wrestling", motor: "racing motorsport" };
+// Thai search words → English text found in event names. Add more pairs here as needed.
+const TH_ALIASES = [
+  // sports
+  [["ฟุตบอล", "บอล", "ซอคเกอร์"], ["soccer"]], [["บาส", "บาสเกตบอล", "บาสเก็ตบอล"], ["basketball", "nba"]],
+  [["อเมริกันฟุตบอล", "อเมฟุต"], ["american football", "nfl", "ncaaf"]], [["ฮอกกี้", "ฮ็อกกี้"], ["hockey", "nhl"]],
+  [["วอลเลย์", "วอลเลย์บอล"], ["volleyball"]], [["เทนนิส"], ["tennis", "atp", "wta"]],
+  [["มวย", "ชกมวย"], ["boxing", "fight", "muay", "ufc", "mma"]], [["มวยไทย"], ["muay"]], [["ยูเอฟซี"], ["ufc"]],
+  [["มวยปล้ำ"], ["wrestling", "wwe", "aew", "gcw"]], [["รถแข่ง", "ฟอร์มูล่า", "เอฟวัน", "เอฟ1"], ["racing", "formula", "f1", "nascar", "motogp"]],
+  [["โมโตจีพี"], ["motogp"]], [["ปาเป้า", "ดาร์ท", "ดาร์ต"], ["darts"]], [["คริกเก็ต"], ["cricket"]], [["กอล์ฟ"], ["golf"]],
+  [["ว่ายน้ำ"], ["swimming"]], [["รักบี้"], ["rugby"]], [["เบสบอล"], ["baseball", "mlb"]], [["สนุกเกอร์"], ["snooker"]],
+  [["แบดมินตัน"], ["badminton"]], [["อีสปอร์ต"], ["lec", "esports"]], [["หญิง"], ["women"]], [["ชาย"], ["men's"]],
+  [["รอบชิง", "นัดชิง"], ["final"]], [["แถลงข่าว"], ["press conference"]], [["ซ้อม"], ["practice"]], [["ควอลิฟาย", "รอบคัดเลือก"], ["qualifying"]],
+  // leagues
+  [["พรีเมียร์ลีก", "อังกฤษ"], ["premier league", "english"]], [["ลาลีกา", "สเปน"], ["laliga", "la liga"]], [["กัลโช่", "เซเรียอา", "อิตาลี"], ["serie a"]],
+  [["บุนเดสลีกา", "เยอรมัน"], ["bundesliga"]], [["ลีกเอิง", "ฝรั่งเศส"], ["ligue 1"]], [["ยูฟ่า", "แชมเปียนส์ลีก", "ยูซีแอล"], ["uefa", "champions league"]],
+  [["เอ็มแอลเอส"], ["mls"]], [["เอ็นบีเอ"], ["nba"]], [["เอ็นเอฟแอล"], ["nfl"]], [["เอ็นเอชแอล"], ["nhl"]], [["มหาวิทยาลัย", "มหาลัย"], ["college", "university", "ncaa"]],
+  // football clubs
+  [["แมนยู", "แมนยูไนเต็ด", "ปีศาจแดง"], ["manchester united", "man united", "man utd"]], [["แมนซิตี้", "เรือใบ"], ["manchester city", "man city"]],
+  [["ลิเวอร์พูล", "หงส์แดง"], ["liverpool"]], [["อาร์เซนอล", "ปืนใหญ่"], ["arsenal"]], [["เชลซี", "สิงห์บลู"], ["chelsea"]],
+  [["สเปอร์ส", "ท็อตแนม", "ไก่"], ["tottenham", "spurs"]], [["นิวคาสเซิล", "สาลิกา"], ["newcastle"]], [["แอสตันวิลล่า", "วิลล่า"], ["aston villa"]],
+  [["เวสต์แฮม"], ["west ham"]], [["เอฟเวอร์ตัน"], ["everton"]], [["ไบรท์ตัน"], ["brighton"]],
+  [["เรอัลมาดริด", "เรอัล", "มาดริด", "ราชันชุดขาว"], ["real madrid", "madrid"]], [["บาร์เซโลนา", "บาร์ซ่า", "บาร์ซา"], ["barcelona"]],
+  [["แอตมาดริด", "แอตเลติโก"], ["atletico"]], [["บาเยิร์น"], ["bayern"]], [["ดอร์ทมุนด์"], ["dortmund"]], [["ปารีส", "เปแอสเช"], ["paris", "psg"]],
+  [["ยูเวนตุส", "ยูเว่"], ["juventus"]], [["มิลาน", "เอซีมิลาน"], ["milan"]], [["อินเตอร์"], ["inter"]], [["นาโปลี"], ["napoli"]], [["โรม่า"], ["roma"]],
+  [["อินเตอร์ไมอามี", "ไมอามี"], ["miami"]], [["อัลนาสเซอร์", "อัลนัสร์"], ["al nassr", "nasr"]], [["อัลฮิลาล"], ["hilal"]],
+  // NBA / NFL / NHL teams
+  [["เลเกอร์ส"], ["lakers"]], [["วอร์ริเออร์ส"], ["warriors"]], [["เซลติกส์"], ["celtics"]], [["บูลส์"], ["bulls"]], [["นิกส์"], ["knicks"]],
+  [["ฮีต"], ["heat"]], [["ธันเดอร์"], ["thunder"]], [["คาวบอยส์"], ["cowboys"]], [["ชีฟส์"], ["chiefs"]], [["อีเกิลส์"], ["eagles"]],
+  [["ไฟลเออร์ส"], ["flyers"]], [["บรูอินส์"], ["bruins"]],
+  // people
+  [["เมสซี่", "เมสซี"], ["messi"]], [["โรนัลโด้", "โรนัลโด"], ["ronaldo"]], [["แฟร์สแตปเพน", "เวอร์สแตปเพน"], ["verstappen"]],
+  [["แฮมิลตัน"], ["hamilton"]], [["เลอแคลร์"], ["leclerc"]], [["โนริส"], ["norris"]], [["เลบรอน"], ["lebron"]],
+  // countries
+  [["ไทย"], ["thailand"]], [["ญี่ปุ่น"], ["japan"]], [["เกาหลี"], ["korea"]], [["อเมริกา", "สหรัฐ"], ["usa", "united states"]],
+  [["บราซิล"], ["brazil"]], [["อาร์เจนตินา"], ["argentina"]], [["ฟิลิปปินส์"], ["philippines"]], [["ซาอุ"], ["saudi"]],
+];
+const THAI_RX = /[฀-๿]/;
+// Every word typed must match; a Thai word also matches its English names.
+// What the person typed matches anywhere; an English alias must start a word ("mma" is not in "Immaculata").
+const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const wordStart = (en) => en.map((e) => new RegExp("(^|[^a-z])" + escapeRx(e)));
+function searchTerms(q) {
+  return q.toLowerCase().split(/\s+/).filter(Boolean).map((w) => {
+    const alts = [w];
+    if (!THAI_RX.test(w)) return alts;
+    // An exact alias wins, then one that starts with the word, then one inside it ("มวยไทยคืนนี้").
+    const pick = (test) => TH_ALIASES.filter(([th]) => th.some(test)).flatMap(([, en]) => en);
+    for (const test of [(t) => t === w, (t) => w.length >= 3 && t.startsWith(w), (t) => w.includes(t)]) {
+      const en = pick(test);
+      if (en.length) return alts.concat(wordStart(en));
+    }
+    return alts;
+  });
+}
+// Thai category names are left out on purpose: "ฟุตบอล" sits inside "อเมริกันฟุตบอล". TH_ALIASES covers them.
+const searchText = (it) => `${it.name} ${it.channel} ${it.num} ${CAT_WORDS[it.cat] || ""}`.toLowerCase();
 const DAYS = { all: "ทั้งหมด", today: "วันนี้", tomorrow: "พรุ่งนี้", week: "7 วันข้างหน้า" };
 const TH_OFFSET = 7;
 const REFRESH_MS = 5 * 60 * 1000;
@@ -178,14 +236,14 @@ function render() {
   const now = Date.now();
   const todayKey = thDayKey(now);
   const tomorrowKey = thDayKey(now + 864e5);
-  const q = state.q.toLowerCase();
+  const terms = searchTerms(state.q);
 
   visible = state.items
     .map((it) => ({ ...it, dayKey: thDayKey(it.t) }))
     .filter((it) => endsAt(it) >= now)
     .filter((it) => state.cat === "all" || it.cat === state.cat)
     .filter((it) => state.ch === "all" || it.channel === state.ch)
-    .filter((it) => !q || `${it.name} ${it.channel} ${it.num}`.toLowerCase().includes(q))
+    .filter((it) => { if (!terms.length) return true; const s = searchText(it); return terms.every((alts) => alts.some((a) => (typeof a === "string" ? s.includes(a) : a.test(s)))); })
     .filter((it) => {
       if (state.day === "today") return it.dayKey === todayKey;
       if (state.day === "tomorrow") return it.dayKey === tomorrowKey;
